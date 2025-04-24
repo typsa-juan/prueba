@@ -32,8 +32,8 @@ const CesiumViewer = ({ coordinates }: Props) => {
 
   const capas = [
     {
-      url: `${import.meta.env.BASE_URL}data/ColectoresTr10Paquete03.geojson`,
-      name: "Colectores PQ3",
+      url: `${import.meta.env.BASE_URL}data/ColectoresTr10Paquete04.geojson`,
+      name: "Colectores PQ4",
       color: Cesium.Color.YELLOW.withAlpha(0.4),
     },
     {
