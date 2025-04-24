@@ -32,26 +32,25 @@ const CesiumViewer = ({ coordinates }: Props) => {
 
   const capas = [
     {
-      url: "/data/ColectoresTr10Paquete03.geojson",
+      url: `${import.meta.env.BASE_URL}data/ColectoresTr10Paquete03.geojson`,
       name: "Colectores PQ3",
       color: Cesium.Color.YELLOW.withAlpha(0.4),
     },
     {
-      url: "/data/EjeDrenesPaq3.geojson",
+      url: `${import.meta.env.BASE_URL}data/EjeDrenesPaq3.geojson`,
       name: "Eje Drenes Paquete 3",
       color: Cesium.Color.CYAN.withAlpha(0.4),
     },
     {
-      url: "/data/TanquesRetencion.geojson",
+      url: `${import.meta.env.BASE_URL}data/TanquesRetencion.geojson`,
       name: "TRAP200",
       color: Cesium.Color.RED.withAlpha(0.4),
     },
     {
-      url: "/data/EstructurasDrenPaq3.geojson",
+      url: `${import.meta.env.BASE_URL}data/EstructurasDrenPaq3.geojson`,
       name: "Estructuras especiales",
       color: Cesium.Color.GREEN.withAlpha(0.4),
     },
-    // Agrega más capas aquí con diferentes colores si quieres
   ];
 
   const geojsonIonAssets = [
@@ -104,7 +103,7 @@ const CesiumViewer = ({ coordinates }: Props) => {
       });
 
       // Capas GeoJSON Cesium Ion
- geojsonIonAssets.forEach(({ id, name, color }) => {
+ geojsonIonAssets.forEach(({ id, color }) => {
   Cesium.IonResource.fromAssetId(id).then((resource) => {
     Cesium.GeoJsonDataSource.load(resource, {
       stroke: color,
@@ -157,7 +156,7 @@ const CesiumViewer = ({ coordinates }: Props) => {
       <div style={{
         position: "absolute",
         bottom: 10,
-        right: 10,
+        left: 10,
         background: "#fff",
         padding: "0.8rem",
         borderRadius: "0.5rem",
