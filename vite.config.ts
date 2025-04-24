@@ -4,14 +4,14 @@ import cesium from 'vite-plugin-cesium';
 
 export default defineConfig({
   plugins: [react(), cesium()],
-  base: '/BIM-GIS/',
-  build: {
-    outDir: 'dist',
-    emptyOutDir: true,
-  },
-  resolve: {
-    alias: {
-      '@': '/src',
-    },
-  },
+  base: '/prueba/',
+  // build: {
+  //   outDir: 'dist',
+  //   emptyOutDir: true,
+  // },
+  // resolve: {
+  //   alias: {
+  //     '@': '/src',
+  //   },
+  // },
 });

@@ -31,14 +31,49 @@ const CesiumViewer = ({ coordinates }: Props) => {
   };
 
   const capas = [
-    "/data/ColectoresTr10Paquete03.geojson",
-    "/data/TanquesRetencion.geojson",
-    "/data/EjeDrenesPaq3.geojson",
-    "/data/EstructurasDrenPaq3.geojson",
+    {
+      url: "/data/ColectoresTr10Paquete03.geojson",
+      name: "Colectores PQ3",
+      color: Cesium.Color.YELLOW.withAlpha(0.4),
+    },
+    {
+      url: "/data/EjeDrenesPaq3.geojson",
+      name: "Eje Drenes Paquete 3",
+      color: Cesium.Color.CYAN.withAlpha(0.4),
+    },
+    {
+      url: "/data/TanquesRetencion.geojson",
+      name: "TRAP200",
+      color: Cesium.Color.RED.withAlpha(0.4),
+    },
+    {
+      url: "/data/EstructurasDrenPaq3.geojson",
+      name: "Estructuras especiales",
+      color: Cesium.Color.GREEN.withAlpha(0.4),
+    },
+    // Agrega más capas aquí con diferentes colores si quieres
+  ];
+
+  const geojsonIonAssets = [
+    {
+      id: 3326798,
+      name: "Colectores - Cesium Ion",
+      color: Cesium.Color.YELLOW.withAlpha(0.3),
+    },
+    {
+        id: 3326980,
+        name: "Estructuras Especiales - Cesium Ion",
+        color: Cesium.Color.RED.withAlpha(0.3),
+      },
+      {
+        id: 3326983,
+        name: "Eje Dren - Cesium Ion",
+        color: Cesium.Color.RED.withAlpha(0.3),
+      },
   ];
 
   useEffect(() => {
-    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZDZiZTc0Ny0yMWJjLTRkYWEtYjA5OC1mNDg5ZmU0MGQ0NjEiLCJpZCI6MjkwMzY1LCJpYXQiOjE3NDM2MDM4MTB9.zDzBjVMs4ZdupOkiv7fxTLF_zDlvgmfwkxzvn7L2jpM"; // tu token
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZDZiZTc0Ny0yMWJjLTRkYWEtYjA5OC1mNDg5ZmU0MGQ0NjEiLCJpZCI6MjkwMzY1LCJpYXQiOjE3NDM2MDM4MTB9.zDzBjVMs4ZdupOkiv7fxTLF_zDlvgmfwkxzvn7L2jpM";
 
     if (!viewerRef.current && containerRef.current) {
       const viewer = new Cesium.Viewer(containerRef.current, {
@@ -46,17 +81,17 @@ const CesiumViewer = ({ coordinates }: Props) => {
       });
       viewerRef.current = viewer;
 
-      // Cargar ortofoto desde Cesium Ion
+      // Ortofoto Cesium Ion
       Cesium.IonImageryProvider.fromAssetId(3326380).then((provider) => {
         const layer = viewer.imageryLayers.addImageryProvider(provider);
         orthoLayerRef.current = layer;
       });
 
-      // Cargar capas GeoJSON
-      capas.forEach((url) => {
+      // Capas GeoJSON locales
+      capas.forEach(({ url, color }) => {
         Cesium.GeoJsonDataSource.load(url, {
-          stroke: Cesium.Color.YELLOW,
-          fill: Cesium.Color.YELLOW.withAlpha(0.4),
+          stroke: color,
+          fill: color,
           strokeWidth: 2,
           clampToGround: true,
         })
@@ -65,9 +100,26 @@ const CesiumViewer = ({ coordinates }: Props) => {
             dataSourcesRef.current[url] = ds;
             setLayerVisibility((prev) => ({ ...prev, [url]: true }));
           })
-          .catch((err) => {
-            console.error(`Error cargando ${url}:`, err);
-          });
+          .catch((err) => console.error(`Error cargando ${url}:`, err));
+      });
+
+      // Capas GeoJSON Cesium Ion
+ geojsonIonAssets.forEach(({ id, name, color }) => {
+  Cesium.IonResource.fromAssetId(id).then((resource) => {
+    Cesium.GeoJsonDataSource.load(resource, {
+      stroke: color,
+      fill: color,
+      strokeWidth: 2,
+      clampToGround: true,
+    })
+            .then((ds) => {
+              viewer.dataSources.add(ds);
+              const key = `ion-${id}`;
+              dataSourcesRef.current[key] = ds;
+              setLayerVisibility((prev) => ({ ...prev, [key]: true }));
+            })
+            .catch((err) => console.error(`Error GeoJSON Ion (${id}):`, err));
+        });
       });
     }
   }, []);
@@ -87,7 +139,6 @@ const CesiumViewer = ({ coordinates }: Props) => {
     }
   }, [coordinates]);
 
-  // Actualiza visibilidad de cada capa GeoJSON
   useEffect(() => {
     Object.entries(layerVisibility).forEach(([url, visible]) => {
       const ds = dataSourcesRef.current[url];
@@ -95,7 +146,6 @@ const CesiumViewer = ({ coordinates }: Props) => {
     });
   }, [layerVisibility]);
 
-  // Actualiza visibilidad de ortofoto
   useEffect(() => {
     if (orthoLayerRef.current) {
       orthoLayerRef.current.show = orthoVisible;
@@ -108,29 +158,30 @@ const CesiumViewer = ({ coordinates }: Props) => {
         position: "absolute",
         bottom: 10,
         right: 10,
-        background: "#ffffffcc",
+        background: "#fff",
         padding: "0.8rem",
         borderRadius: "0.5rem",
         zIndex: 20,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
         maxHeight: "90vh",
         overflowY: "auto",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+        minWidth: "220px"
       }}>
-        <h3 style={{ marginTop: 0 }}>Capas disponibles</h3>
+        <h3 style={{ marginTop: 0, fontSize: "1rem" }}>Capas visibles</h3>
 
-        <div>
+        <div style={{ marginBottom: "0.5rem" }}>
           <label>
             <input
               type="checkbox"
               checked={orthoVisible}
               onChange={(e) => setOrthoVisible(e.target.checked)}
-            />
+            />{" "}
             Ortofoto (Cesium Ion)
           </label>
         </div>
 
-        {capas.map((url) => (
-          <div key={url}>
+        {capas.map(({ url, name }) => (
+          <div key={url} style={{ marginBottom: "0.5rem" }}>
             <label>
               <input
                 type="checkbox"
@@ -141,11 +192,32 @@ const CesiumViewer = ({ coordinates }: Props) => {
                     [url]: e.target.checked,
                   }))
                 }
-              />
-              {url.split("/").pop()}
+              />{" "}
+              {name}
             </label>
           </div>
         ))}
+
+        {geojsonIonAssets.map(({ id, name }) => {
+          const key = `ion-${id}`;
+          return (
+            <div key={key} style={{ marginBottom: "0.5rem" }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={layerVisibility[key] ?? true}
+                  onChange={(e) =>
+                    setLayerVisibility((prev) => ({
+                      ...prev,
+                      [key]: e.target.checked,
+                    }))
+                  }
+                />{" "}
+                {name}
+              </label>
+            </div>
+          );
+        })}
       </div>
 
       <div
