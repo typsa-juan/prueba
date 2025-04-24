@@ -1,4 +1,3 @@
-// CesiumViewer.tsx
 import { useEffect, useRef, useState } from "react";
 import proj4 from "proj4";
 import * as Cesium from "cesium";
@@ -19,6 +18,7 @@ const CesiumViewer = ({ coordinates }: Props) => {
 
   const [layerVisibility, setLayerVisibility] = useState<Record<string, boolean>>({});
   const [orthoVisible, setOrthoVisible] = useState(true);
+  const [panelVisible, setPanelVisible] = useState(false);
   const dataSourcesRef = useRef<Record<string, Cesium.DataSource>>({});
   const orthoLayerRef = useRef<Cesium.ImageryLayer | null>(null);
 
@@ -60,19 +60,19 @@ const CesiumViewer = ({ coordinates }: Props) => {
       color: Cesium.Color.YELLOW.withAlpha(0.3),
     },
     {
-        id: 3326980,
-        name: "Estructuras Especiales - Cesium Ion",
-        color: Cesium.Color.RED.withAlpha(0.3),
-      },
-      {
-        id: 3326983,
-        name: "Eje Dren - Cesium Ion",
-        color: Cesium.Color.RED.withAlpha(0.3),
-      },
+      id: 3326980,
+      name: "Estructuras Especiales - Cesium Ion",
+      color: Cesium.Color.RED.withAlpha(0.3),
+    },
+    {
+      id: 3326983,
+      name: "Eje Dren - Cesium Ion",
+      color: Cesium.Color.RED.withAlpha(0.3),
+    },
   ];
 
   useEffect(() => {
-    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZDZiZTc0Ny0yMWJjLTRkYWEtYjA5OC1mNDg5ZmU0MGQ0NjEiLCJpZCI6MjkwMzY1LCJpYXQiOjE3NDM2MDM4MTB9.zDzBjVMs4ZdupOkiv7fxTLF_zDlvgmfwkxzvn7L2jpM";
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4ZDZiZTc0Ny0yMWJjLTRkYWEtYjA5OC1mNDg5ZmU0MGQ0NjEiLCJpZCI6MjkwMzY1LCJpYXQiOjE3NDM2MDM4MTB9.zDzBjVMs4ZdupOkiv7fxTLF_zDlvgmfwkxzvn7L2jpM"; // tu token completo
 
     if (!viewerRef.current && containerRef.current) {
       const viewer = new Cesium.Viewer(containerRef.current, {
@@ -93,31 +93,27 @@ const CesiumViewer = ({ coordinates }: Props) => {
           fill: color,
           strokeWidth: 2,
           clampToGround: true,
-        })
-          .then((ds) => {
-            viewer.dataSources.add(ds);
-            dataSourcesRef.current[url] = ds;
-            setLayerVisibility((prev) => ({ ...prev, [url]: true }));
-          })
-          .catch((err) => console.error(`Error cargando ${url}:`, err));
+        }).then((ds) => {
+          viewer.dataSources.add(ds);
+          dataSourcesRef.current[url] = ds;
+          setLayerVisibility((prev) => ({ ...prev, [url]: true }));
+        });
       });
 
-      // Capas GeoJSON Cesium Ion
- geojsonIonAssets.forEach(({ id, color }) => {
-  Cesium.IonResource.fromAssetId(id).then((resource) => {
-    Cesium.GeoJsonDataSource.load(resource, {
-      stroke: color,
-      fill: color,
-      strokeWidth: 2,
-      clampToGround: true,
-    })
-            .then((ds) => {
-              viewer.dataSources.add(ds);
-              const key = `ion-${id}`;
-              dataSourcesRef.current[key] = ds;
-              setLayerVisibility((prev) => ({ ...prev, [key]: true }));
-            })
-            .catch((err) => console.error(`Error GeoJSON Ion (${id}):`, err));
+      // Capas GeoJSON Ion
+      geojsonIonAssets.forEach(({ id, color }) => {
+        Cesium.IonResource.fromAssetId(id).then((resource) => {
+          Cesium.GeoJsonDataSource.load(resource, {
+            stroke: color,
+            fill: color,
+            strokeWidth: 2,
+            clampToGround: true,
+          }).then((ds) => {
+            viewer.dataSources.add(ds);
+            const key = `ion-${id}`;
+            dataSourcesRef.current[key] = ds;
+            setLayerVisibility((prev) => ({ ...prev, [key]: true }));
+          });
         });
       });
     }
@@ -139,8 +135,8 @@ const CesiumViewer = ({ coordinates }: Props) => {
   }, [coordinates]);
 
   useEffect(() => {
-    Object.entries(layerVisibility).forEach(([url, visible]) => {
-      const ds = dataSourcesRef.current[url];
+    Object.entries(layerVisibility).forEach(([key, visible]) => {
+      const ds = dataSourcesRef.current[key];
       if (ds) ds.show = visible;
     });
   }, [layerVisibility]);
@@ -153,71 +149,92 @@ const CesiumViewer = ({ coordinates }: Props) => {
 
   return (
     <>
-      <div style={{
-        position: "absolute",
-        bottom: 10,
-        left: 10,
-        background: "#fff",
-        padding: "0.8rem",
-        borderRadius: "0.5rem",
-        zIndex: 20,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        minWidth: "220px"
-      }}>
-        <h3 style={{ marginTop: 0, fontSize: "1rem" }}>Capas visibles</h3>
+      <button
+        onClick={() => setPanelVisible((prev) => !prev)}
+        style={{
+          position: "absolute",
+          bottom: 10,
+          left: 10,
+          zIndex: 30,
+          padding: "0.5rem 1rem",
+          background: "#007bff",
+          color: "#fff",
+          border: "none",
+          borderRadius: "0.5rem",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+        }}
+      >
+        {panelVisible ? "Cerrar panel" : "Mostrar capas"}
+      </button>
 
-        <div style={{ marginBottom: "0.5rem" }}>
-          <label>
-            <input
-              type="checkbox"
-              checked={orthoVisible}
-              onChange={(e) => setOrthoVisible(e.target.checked)}
-            />{" "}
-            Ortofoto (Cesium Ion)
-          </label>
-        </div>
+      {panelVisible && (
+        <div style={{
+          position: "absolute",
+          bottom: 60,
+          left: 10,
+          background: "#fff",
+          padding: "0.8rem",
+          borderRadius: "0.5rem",
+          zIndex: 20,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+          maxHeight: "90vh",
+          overflowY: "auto",
+          minWidth: "220px"
+        }}>
+          <h3 style={{ marginTop: 0, fontSize: "1rem" }}>Capas visibles</h3>
 
-        {capas.map(({ url, name }) => (
-          <div key={url} style={{ marginBottom: "0.5rem" }}>
+          <div style={{ marginBottom: "0.5rem" }}>
             <label>
               <input
                 type="checkbox"
-                checked={layerVisibility[url] ?? true}
-                onChange={(e) =>
-                  setLayerVisibility((prev) => ({
-                    ...prev,
-                    [url]: e.target.checked,
-                  }))
-                }
+                checked={orthoVisible}
+                onChange={(e) => setOrthoVisible(e.target.checked)}
               />{" "}
-              {name}
+              Ortofoto (Cesium Ion)
             </label>
           </div>
-        ))}
 
-        {geojsonIonAssets.map(({ id, name }) => {
-          const key = `ion-${id}`;
-          return (
-            <div key={key} style={{ marginBottom: "0.5rem" }}>
+          {capas.map(({ url, name }) => (
+            <div key={url} style={{ marginBottom: "0.5rem" }}>
               <label>
                 <input
                   type="checkbox"
-                  checked={layerVisibility[key] ?? true}
+                  checked={layerVisibility[url] ?? true}
                   onChange={(e) =>
                     setLayerVisibility((prev) => ({
                       ...prev,
-                      [key]: e.target.checked,
+                      [url]: e.target.checked,
                     }))
                   }
                 />{" "}
                 {name}
               </label>
             </div>
-          );
-        })}
-      </div>
+          ))}
+
+          {geojsonIonAssets.map(({ id, name }) => {
+            const key = `ion-${id}`;
+            return (
+              <div key={key} style={{ marginBottom: "0.5rem" }}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={layerVisibility[key] ?? true}
+                    onChange={(e) =>
+                      setLayerVisibility((prev) => ({
+                        ...prev,
+                        [key]: e.target.checked,
+                      }))
+                    }
+                  />{" "}
+                  {name}
+                </label>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div
         ref={containerRef}
