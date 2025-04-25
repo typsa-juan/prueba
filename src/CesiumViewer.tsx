@@ -81,7 +81,7 @@ const CesiumViewer = ({ coordinates }: Props) => {
       viewerRef.current = viewer;
 
       // Ortofoto Cesium Ion
-      Cesium.IonImageryProvider.fromAssetId(3326380).then((provider) => {
+      Cesium.IonImageryProvider.fromAssetId(3332212).then((provider) => {
         const layer = viewer.imageryLayers.addImageryProvider(provider);
         orthoLayerRef.current = layer;
       });
