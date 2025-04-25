@@ -57,7 +57,7 @@ const CesiumViewer = ({ coordinates }: Props) => {
     {
       id: 3326798,
       name: "Colectores - Cesium Ion",
-      color: Cesium.Color.YELLOW.withAlpha(0.3),
+      color: Cesium.Color.BLUE.withAlpha(0.3),
     },
     {
       id: 3326980,
